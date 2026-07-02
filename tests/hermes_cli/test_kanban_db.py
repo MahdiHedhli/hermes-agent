@@ -53,6 +53,19 @@ def test_init_db_is_idempotent(kanban_home):
     assert tasks[0].title == "persisted"
 
 
+def test_create_task_model_override_round_trips(kanban_home):
+    """A per-task model override persists through create_task -> get_task; an unset or
+    whitespace-only value normalises to None (so the dispatcher's ``-m`` thread only fires
+    for a real slug)."""
+    with kb.connect() as conn:
+        with_model = kb.create_task(conn, title="build", model_override="anthropic/claude-opus-4")
+        without = kb.create_task(conn, title="plain")
+        blank = kb.create_task(conn, title="blank", model_override="   ")
+        assert kb.get_task(conn, with_model).model_override == "anthropic/claude-opus-4"
+        assert kb.get_task(conn, without).model_override is None
+        assert kb.get_task(conn, blank).model_override is None
+
+
 def test_init_creates_expected_tables(kanban_home):
     with kb.connect() as conn:
         rows = conn.execute(

@@ -2648,6 +2648,7 @@
     const [priority, setPriority] = useState(0);
     const [parent, setParent] = useState("");
     const [skills, setSkills] = useState("");
+    const [model, setModel] = useState("");
     // Workspace controls. `scratch` (default) ignores path; `worktree` optionally
     // takes a path (dispatcher derives one from the assignee profile otherwise);
     // `dir` requires a path. Backend enforces the rule — we only hide/show the
@@ -2680,6 +2681,9 @@
         .map(function (s) { return s.trim(); })
         .filter(function (s) { return s.length > 0; });
       if (skillList.length > 0) body.skills = skillList;
+      // Per-task model override (blank = use the assignee profile's default).
+      const modelTrim = model.trim();
+      if (modelTrim) body.model_override = modelTrim;
       // Only send workspace_kind when it's non-default. Keeps the request
       // shape small and interoperable with older dispatcher versions.
       if (workspaceKind && workspaceKind !== "scratch") {
@@ -2695,7 +2699,7 @@
         if (Number.isFinite(gmt) && gmt > 0) body.goal_max_turns = gmt;
       }
       props.onSubmit(body);
-      setTitle(""); setAssignee(""); setPriority(0); setParent(""); setSkills("");
+      setTitle(""); setAssignee(""); setPriority(0); setParent(""); setSkills(""); setModel("");
       setWorkspaceKind("scratch"); setWorkspacePath("");
       setGoalMode(false); setGoalMaxTurns("");
     };
@@ -2752,6 +2756,14 @@
         placeholder: tx(t, "skillsPlaceholder",
           "skills (optional, comma-separated): translation, github-code-review"),
         title: "Force-load these skills into the worker (in addition to the built-in kanban-worker).",
+        className: "h-7 text-xs",
+      }),
+      h(Input, {
+        value: model,
+        onChange: function (e) { setModel(e.target.value); },
+        placeholder: tx(t, "modelPlaceholder",
+          "model (optional): overrides the assignee profile's default, e.g. anthropic/claude-opus-4"),
+        title: "Per-task model slug, passed to the worker as -m <model>.",
         className: "h-7 text-xs",
       }),
       h("div", { className: "flex gap-2 items-center" },
