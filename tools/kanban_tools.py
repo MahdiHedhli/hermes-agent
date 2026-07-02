@@ -881,6 +881,7 @@ def _handle_create(args: dict, **kw) -> str:
         return tool_error(
             f"skills must be a list of skill names, got {type(skills).__name__}"
         )
+    model = args.get("model")
     goal_mode, goal_bool_error = _parse_bool_arg(args, "goal_mode")
     if goal_bool_error:
         return tool_error(goal_bool_error)
@@ -926,6 +927,7 @@ def _handle_create(args: dict, **kw) -> str:
                     if max_runtime_seconds is not None else None
                 ),
                 skills=skills,
+                model_override=(str(model).strip() or None) if model else None,
                 goal_mode=goal_mode,
                 goal_max_turns=(
                     int(goal_max_turns) if goal_max_turns is not None else None
@@ -1513,6 +1515,14 @@ KANBAN_CREATE_SCHEMA = {
                     "task, ['github-code-review'] for a reviewer task. "
                     "The names must match skills installed on the "
                     "assignee's profile."
+                ),
+            },
+            "model": {
+                "type": "string",
+                "description": (
+                    "Optional per-task model slug. Passed to the worker as "
+                    "-m <model>, overriding the assignee profile's default "
+                    "model. Omit to inherit the profile config."
                 ),
             },
             "goal_mode": {
